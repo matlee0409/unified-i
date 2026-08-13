@@ -17,7 +17,7 @@ const channelDescriptions: Record<Platform, string> = {
 
 export default function ChannelsPage() {
   return (
-    <main className="min-h-dvh overflow-y-auto bg-[var(--chat-canvas)] text-foreground">
+    <main className="h-dvh overflow-hidden bg-[var(--chat-canvas)] text-foreground">
       <header className="border-b border-[var(--chat-border)] bg-background">
         <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div>
@@ -54,7 +54,7 @@ export default function ChannelsPage() {
               </div>
               <h3 className="mt-5 font-semibold">{PLATFORM_LABELS[platform]}</h3>
               <p className="mt-1 flex-1 text-sm leading-6 text-muted-foreground">{channelDescriptions[platform]}</p>
-              <Button asChild variant="outline" className="mt-5 w-full bg-background"><a href="https://zernio.com" target="_blank" rel="noreferrer">Add {PLATFORM_LABELS[platform]}</a></Button>
+              <Button asChild variant="outline" className="mt-5 w-full bg-background"><a href={`/api/connect/${platform}`}>Add {PLATFORM_LABELS[platform]}</a></Button>
             </article>
           ))}
         </section>
