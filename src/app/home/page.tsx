@@ -12,6 +12,7 @@ import {
   Plus,
   Users,
 } from 'lucide-react';
+import { SidebarToggle } from '@/components/app-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ export default function BookingHomePage() {
     <main className="min-h-dvh overflow-y-auto bg-[var(--chat-canvas)] text-foreground">
       <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+          <SidebarToggle />
           <Link href="/home" className="flex items-center gap-2.5" aria-label="Booking home">
             <BookingMark />
             <span className="text-base font-semibold tracking-tight">Bookly</span>
