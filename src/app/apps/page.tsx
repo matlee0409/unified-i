@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { SidebarToggle } from '@/components/app-sidebar';
 import { AppWindow, Check, Loader2, Plug, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +54,7 @@ export default function AppsPage() {
 
   return (
     <main className="h-dvh overflow-y-auto overscroll-contain bg-[var(--chat-canvas)] text-foreground">
-      <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur"><div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8"><div><h1 className="text-lg font-semibold tracking-tight">Apps</h1><p className="hidden text-sm text-muted-foreground sm:block">Connect your calendar and favorite tools.</p></div></div></header>
+      <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur"><div className="mx-auto flex min-h-16 max-w-6xl items-center justify-start gap-4 px-4 sm:px-6 lg:px-8"><SidebarToggle /><div><h1 className="text-lg font-semibold tracking-tight">Apps</h1><p className="hidden text-sm text-muted-foreground sm:block">Connect your calendar and favorite tools.</p></div></div></header>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-xl font-semibold tracking-tight">Configured apps</h2><p className="mt-1 text-sm text-muted-foreground">Apps enabled in your Composio auth configurations.</p></div><div className="relative w-full sm:w-72"><Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps" className="pl-9" /></div></div>
         {error && <div className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
