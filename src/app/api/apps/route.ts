@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { composioFetch, hasComposioKey } from '@/lib/server/composio';
+import { composioFetch, filterConfiguredApps, hasComposioKey } from '@/lib/server/composio';
 
 export async function GET() {
   if (!hasComposioKey()) {
@@ -13,10 +13,5 @@ export async function GET() {
   if (!toolkitsResponse.ok) return NextResponse.json(await toolkitsResponse.json(), { status: toolkitsResponse.status });
   if (!authConfigsResponse.ok) return NextResponse.json(await authConfigsResponse.json(), { status: authConfigsResponse.status });
 
-  const toolkitsBody = (await toolkitsResponse.json()) as { items?: unknown[]; toolkits?: unknown[] };
-  const authConfigsBody = (await authConfigsResponse.json()) as { items?: unknown[]; auth_configs?: unknown[] };
-  return NextResponse.json({
-    toolkits: toolkitsBody.items ?? toolkitsBody.toolkits ?? [],
-    authConfigs: authConfigsBody.items ?? authConfigsBody.auth_configs ?? [],
-  });
+  return NextResponse.json(filterConfiguredApps(await toolkitsResponse.json(), await authConfigsResponse.json()));
 }
