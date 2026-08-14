@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CheckCircle2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { PlatformIcon, PLATFORM_LABELS } from '@/components/platform-icon';
 import { Button } from '@/components/ui/button';
 import { MESSAGE_PLATFORMS } from '@/lib/capabilities';
@@ -41,7 +41,6 @@ export default function ChannelsPage() {
             <article key={platform} className="flex min-h-44 flex-col rounded-xl border border-[var(--chat-border)] bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex size-9 items-center justify-center rounded-xl bg-muted"><PlatformIcon platform={platform} className="size-5" /></div>
-                <CheckCircle2 className="size-4 text-emerald-500" aria-label="Available" />
               </div>
               <h3 className="mt-3 text-sm font-semibold">{PLATFORM_LABELS[platform]}</h3>
               <p className="mt-1 flex-1 text-xs leading-5 text-muted-foreground">{channelDescriptions[platform]}</p>
