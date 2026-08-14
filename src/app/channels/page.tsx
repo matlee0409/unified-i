@@ -1,7 +1,10 @@
+'use client';
+
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { PlatformIcon, PLATFORM_LABELS } from '@/components/platform-icon';
 import { Button } from '@/components/ui/button';
+import { useAccounts } from '@/hooks/useAccounts';
 import { MESSAGE_PLATFORMS } from '@/lib/capabilities';
 import type { Platform } from '@/lib/types';
 
@@ -16,6 +19,9 @@ const channelDescriptions: Record<Platform, string> = {
 };
 
 export default function ChannelsPage() {
+  const { accounts } = useAccounts();
+  const connectedPlatforms = new Set(accounts.map((account) => account.platform));
+
   return (
     <main className="h-dvh overflow-y-auto overscroll-contain bg-[var(--chat-canvas)] text-foreground">
       <header className="border-b border-[var(--chat-border)] bg-background">
@@ -44,7 +50,7 @@ export default function ChannelsPage() {
               </div>
               <h3 className="mt-3 text-sm font-semibold">{PLATFORM_LABELS[platform]}</h3>
               <p className="mt-1 flex-1 text-xs leading-5 text-muted-foreground">{channelDescriptions[platform]}</p>
-              <Button asChild variant="outline" className="mt-3 w-full bg-background"><a href={`/api/connect/${platform}`}>Add {PLATFORM_LABELS[platform]}</a></Button>
+              <Button asChild variant="outline" className="mt-3 w-full bg-background"><a href={`/api/connect/${platform}`}>{connectedPlatforms.has(platform) ? 'Connected' : `Connect ${PLATFORM_LABELS[platform]}`}</a></Button>
             </article>
           ))}
         </section>
