@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Unified Inbox",
   description:
-    "Open source unified inbox for WhatsApp, Instagram, Messenger, Telegram, X, Reddit, and Bluesky. Built on the Zernio API.",
+    "Open source unified inbox for WhatsApp, Instagram, Messenger, Telegram, X, Reddit, and Bluesky.",
 };
 
 export const viewport: Viewport = {

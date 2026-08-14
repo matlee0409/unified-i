@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterConfiguredApps } from '@/lib/server/composio';
+import { filterConfiguredApps, filterConnectedApps } from '@/lib/server/composio';
 
 describe('filterConfiguredApps', () => {
   it('returns only toolkits with enabled auth configurations', () => {
@@ -34,5 +34,33 @@ describe('filterConfiguredApps', () => {
 
     expect(result.toolkits).toHaveLength(1);
     expect(result.authConfigs).toHaveLength(1);
+  });
+
+  it('returns only toolkits with active connected accounts', () => {
+    const result = filterConnectedApps(
+      {
+        items: [
+          { slug: 'googlecalendar', name: 'Google Calendar' },
+          { slug: 'slack', name: 'Slack' },
+        ],
+      },
+      {
+        items: [
+          { id: 'calendar-config', toolkit: { slug: 'googlecalendar' }, status: 'ENABLED' },
+          { id: 'slack-config', toolkit: { slug: 'slack' }, status: 'ENABLED' },
+        ],
+      },
+      {
+        items: [
+          { toolkit: { slug: 'googlecalendar' }, status: 'ACTIVE' },
+          { toolkit: { slug: 'slack' }, status: 'FAILED' },
+        ],
+      },
+    );
+
+    expect(result.toolkits).toEqual([{ slug: 'googlecalendar', name: 'Google Calendar' }]);
+    expect(result.authConfigs).toEqual([
+      { id: 'calendar-config', toolkit: { slug: 'googlecalendar' }, status: 'ENABLED' },
+    ]);
   });
 });

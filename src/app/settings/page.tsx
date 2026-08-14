@@ -171,7 +171,7 @@ export default function SettingsPage() {
                   rel="noreferrer"
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Zernio dashboard
+                  provider dashboard
                 </a>{' '}
                 first.
               </p>
@@ -217,14 +217,14 @@ export default function SettingsPage() {
         </section>
 
         <p className="mt-10 text-center text-xs text-muted-foreground">
-          unified-inbox is open source:{' '}
+          Bookly is open source:{' '}
           <a
             href="https://github.com/zernio-dev/unified-inbox"
             target="_blank"
             rel="noreferrer"
             className="underline-offset-4 hover:underline"
           >
-            github.com/zernio-dev/unified-inbox
+            View source on GitHub
           </a>
         </p>
       </div>

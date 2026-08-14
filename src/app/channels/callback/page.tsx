@@ -17,7 +17,7 @@ export default async function ChannelCallbackPage({
         {connected && !error ? <CheckCircle2 className="mx-auto size-10 text-emerald-500" /> : <CircleAlert className="mx-auto size-10 text-primary" />}
         <h1 className="mt-5 text-xl font-semibold tracking-tight">{connected && !error ? 'Channel connected' : 'Connection update'}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          {connected && !error ? 'Your Zernio channel was connected successfully. It will appear in your inbox shortly.' : error ?? 'The connection was not completed. Return to Channels and try again.'}
+          {connected && !error ? 'Your channel was connected successfully. It will appear in your inbox shortly.' : error ?? 'The connection was not completed. Return to Channels and try again.'}
         </p>
         <div className="mt-6 flex justify-center gap-2"><Button asChild><Link href="/channels">Back to Channels</Link></Button><Button asChild variant="outline"><Link href="/inbox">Open inbox</Link></Button></div>
       </section>

@@ -2,7 +2,7 @@ import { composioFetch, hasComposioKey } from './composio';
 import { zernioFetch } from './zernio';
 
 const NVIDIA_URL = process.env.NVIDIA_API_URL ?? 'https://integrate.api.nvidia.com/v1/chat/completions';
-const MODEL = process.env.NVIDIA_MODEL ?? 'meta/llama-3.3-70b-instruct';
+const MODEL = process.env.NVIDIA_MODEL ?? 'minimaxai/minimax-m3';
 
 const tools = [
   {

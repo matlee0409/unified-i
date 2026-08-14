@@ -34,11 +34,11 @@ function NoAccountsScreen() {
           No messaging accounts connected
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Connect accounts in your Zernio dashboard first, then come back here.
+          Connect accounts in your provider dashboard first, then come back here.
         </p>
         <Button asChild className="mt-6">
           <a href="https://zernio.com" target="_blank" rel="noreferrer">
-            Open Zernio dashboard
+            Open provider dashboard
           </a>
         </Button>
       </div>
