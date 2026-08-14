@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
 import { PlatformIcon, PLATFORM_LABELS } from '@/components/platform-icon';
 import { Button } from '@/components/ui/button';
 import { useAccounts } from '@/hooks/useAccounts';
@@ -30,9 +29,6 @@ export default function ChannelsPage() {
             <h1 className="text-lg font-semibold tracking-tight">Channels</h1>
             <p className="hidden text-sm text-muted-foreground sm:block">Connect the channels your customers use.</p>
           </div>
-          <Button asChild>
-            <a href="https://zernio.com" target="_blank" rel="noreferrer"><Plus />Add channels</a>
-          </Button>
         </div>
       </header>
 
