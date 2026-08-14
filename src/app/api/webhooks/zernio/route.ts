@@ -12,6 +12,9 @@ function stringValue(...values: unknown[]) {
   return values.find((value): value is string => typeof value === 'string' && value.trim().length > 0)?.trim() ?? '';
 }
 
+const DEDUPE_WINDOW_MS = 10 * 60 * 1000;
+const seenInboundMessages = new Map<string, number>();
+
 function validSignature(raw: string, signature: string | null) {
   const secret = process.env.ZERNIO_WEBHOOK_SECRET;
   if (!secret) return true;
@@ -49,12 +52,35 @@ export async function POST(req: Request) {
   const conversationId = stringValue(conversation.id, payload.conversationId, payload.conversation_id, message.conversationId, message.conversation_id);
   const accountId = stringValue(account.id, payload.accountId, payload.account_id, message.accountId, message.account_id);
   const senderName = stringValue(sender.name, message.senderName, payload.senderName);
+  const messageId = stringValue(
+    message.id,
+    message.messageId,
+    message.message_id,
+    payload.messageId,
+    payload.message_id,
+    body.messageId,
+    body.message_id,
+    body.id,
+  );
   if (!text || !conversationId || !accountId) return NextResponse.json({ error: 'Missing inbound message fields.' }, { status: 400 });
+
+  if (messageId) {
+    const now = Date.now();
+    for (const [id, seenAt] of seenInboundMessages) {
+      if (now - seenAt > DEDUPE_WINDOW_MS) seenInboundMessages.delete(id);
+    }
+    const seenAt = seenInboundMessages.get(messageId);
+    if (seenAt && now - seenAt <= DEDUPE_WINDOW_MS) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    seenInboundMessages.set(messageId, now);
+  }
 
   try {
     await handleInboundMessage({ conversationId, accountId, text, senderName: senderName || undefined });
     return NextResponse.json({ received: true, handled: true });
   } catch (error) {
+    if (messageId) seenInboundMessages.delete(messageId);
     console.error('Meeting bot webhook failed', error);
     return NextResponse.json({ error: 'The meeting bot could not process this message.' }, { status: 502 });
   }

@@ -37,6 +37,33 @@ describe('POST /api/webhooks/zernio', () => {
     });
   });
 
+  it('ignores a repeated delivery of the same inbound message', async () => {
+    const payload = {
+      event: 'message.received',
+      data: {
+        messageId: 'message-123',
+        conversationId: 'conversation-123',
+        accountId: 'account-123',
+        direction: 'incoming',
+        text: 'hi',
+      },
+    };
+
+    const first = await POST(new Request('https://bookly.example/zernio/webhook', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }));
+    const second = await POST(new Request('https://bookly.example/zernio/webhook', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }));
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    await expect(second.json()).resolves.toEqual({ received: true, duplicate: true });
+    expect(handleInboundMessage).toHaveBeenCalledTimes(1);
+  });
+
   it('ignores outgoing messages', async () => {
     const response = await POST(new Request('https://bookly.example/zernio/webhook', {
       method: 'POST',
