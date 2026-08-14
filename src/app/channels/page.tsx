@@ -50,7 +50,7 @@ export default function ChannelsPage() {
               </div>
               <h3 className="mt-3 text-sm font-semibold">{PLATFORM_LABELS[platform]}</h3>
               <p className="mt-1 flex-1 text-xs leading-5 text-muted-foreground">{channelDescriptions[platform]}</p>
-              <Button asChild variant="outline" className="mt-3 w-full bg-background"><a href={`/api/connect/${platform}`}>{connectedPlatforms.has(platform) ? 'Connected' : `Connect ${PLATFORM_LABELS[platform]}`}</a></Button>
+              <Button asChild variant="outline" className="mt-3 w-full bg-background"><a href={`/api/connect/${platform}`}>{connectedPlatforms.has(platform) ? 'Connected' : 'Connect'}</a></Button>
             </article>
           ))}
         </section>
