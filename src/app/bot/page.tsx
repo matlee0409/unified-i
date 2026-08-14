@@ -25,7 +25,7 @@ export default function BotPage() {
   };
 
   return (
-    <main className="min-h-dvh overflow-y-auto bg-[var(--chat-canvas)] text-foreground">
+    <main className="h-dvh overflow-y-auto overscroll-contain touch-pan-y bg-[var(--chat-canvas)] text-foreground">
       <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div><p className="text-sm text-muted-foreground">Automation</p><h1 className="text-lg font-semibold tracking-tight">Meeting bot</h1></div>
