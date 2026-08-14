@@ -5,7 +5,6 @@ import { Bot, CalendarCheck2, Check, ChevronDown, Clock3, Info, MessageSquareTex
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 
 const tools = [
   { name: 'Check availability', description: 'Find open times in your booking calendar.', icon: Clock3 },
@@ -14,7 +13,6 @@ const tools = [
 ];
 
 export default function BotPage() {
-  const [enabled, setEnabled] = useState(true);
   const [toolChoice, setToolChoice] = useState('auto');
   const [temperature, setTemperature] = useState('0.2');
   const [saved, setSaved] = useState(false);
@@ -34,11 +32,6 @@ export default function BotPage() {
       </header>
 
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="flex flex-col gap-5 rounded-2xl border border-primary/20 bg-primary/5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-          <div className="flex gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Bot className="size-6" /></div><div><h2 className="text-xl font-semibold tracking-tight">Booking assistant</h2><p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">Let an NVIDIA-powered assistant qualify requests and book meetings through your connected channels.</p></div></div>
-          <button type="button" onClick={() => setEnabled((value) => !value)} className={cn('relative h-7 w-12 shrink-0 rounded-full transition-colors', enabled ? 'bg-primary' : 'bg-muted')} aria-pressed={enabled} aria-label="Toggle meeting bot"><span className={cn('absolute top-1 size-5 rounded-full bg-white shadow-sm transition-transform', enabled ? 'translate-x-6' : 'translate-x-1')} /></button>
-        </section>
-
         <div className="mt-8 space-y-6">
           <section className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm sm:p-6">
             <div className="flex items-start gap-3"><div className="flex size-9 items-center justify-center rounded-lg bg-muted"><Bot className="size-4" /></div><div><h2 className="font-semibold tracking-tight">NVIDIA model</h2><p className="mt-1 text-sm text-muted-foreground">Choose the model and response behavior for your assistant.</p></div></div>
