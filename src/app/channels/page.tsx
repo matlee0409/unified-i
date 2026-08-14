@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowUpRight, Check, Link2, Plus } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
 import { PlatformIcon, PLATFORM_LABELS } from '@/components/platform-icon';
 import { Button } from '@/components/ui/button';
 import { MESSAGE_PLATFORMS } from '@/lib/capabilities';
@@ -31,15 +31,6 @@ export default function ChannelsPage() {
       </header>
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="rounded-2xl border border-primary/20 bg-primary/5 p-6 sm:p-8">
-          <div className="max-w-2xl">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Link2 className="size-5" /></div>
-            <h2 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">Meet your customers everywhere</h2>
-            <p className="mt-2 text-muted-foreground">Connect your accounts and manage every conversation from Bookly. Your API key keeps the connection secure.</p>
-            <Button asChild className="mt-6"><a href="https://zernio.com" target="_blank" rel="noreferrer">Manage connections <ArrowUpRight /></a></Button>
-          </div>
-        </section>
-
         <div className="mt-10 flex items-end justify-between gap-4">
           <div><h2 className="text-xl font-semibold tracking-tight">Available channels</h2><p className="mt-1 text-sm text-muted-foreground">All channels supported by your connected services.</p></div>
           <span className="text-sm text-muted-foreground">{MESSAGE_PLATFORMS.length} channels</span>
