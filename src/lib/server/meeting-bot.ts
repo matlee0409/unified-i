@@ -31,17 +31,13 @@ const tools = [
   },
 ];
 
-const toolSlugs: Record<string, string | undefined> = {
-  check_calendar_availability: process.env.COMPOSIO_CALENDAR_AVAILABILITY_TOOL,
-  create_calendar_event: process.env.COMPOSIO_CALENDAR_CREATE_TOOL,
-  search_maps: process.env.COMPOSIO_MAPS_SEARCH_TOOL,
+const toolLookup: Record<string, { toolkit: string; search: string }> = {
+  check_calendar_availability: { toolkit: 'googlecalendar', search: 'availability free busy' },
+  create_calendar_event: { toolkit: 'googlecalendar', search: 'create event' },
+  search_maps: { toolkit: 'googlemaps', search: 'search places' },
 };
 
-const connectedAccounts: Record<string, string | undefined> = {
-  check_calendar_availability: process.env.COMPOSIO_GOOGLE_CALENDAR_CONNECTED_ACCOUNT_ID,
-  create_calendar_event: process.env.COMPOSIO_GOOGLE_CALENDAR_CONNECTED_ACCOUNT_ID,
-  search_maps: process.env.COMPOSIO_GOOGLE_MAPS_CONNECTED_ACCOUNT_ID,
-};
+const COMPOSIO_USER_ID = 'bookly-user';
 
 export async function handleInboundMessage(input: { conversationId: string; accountId: string; text: string; senderName?: string }) {
   if (!process.env.NVIDIA_API_KEY) throw new Error('NVIDIA_API_KEY is not configured');
@@ -72,12 +68,32 @@ async function infer(messages: Array<Record<string, unknown>>) {
 
 async function executeTool(name: string, arguments_: Record<string, unknown>) {
   if (!hasComposioKey()) return { error: 'The business integration is not connected yet.' };
-  const toolSlug = toolSlugs[name];
-  const connectedAccountId = connectedAccounts[name];
-  if (!toolSlug || !connectedAccountId) return { error: `The ${name} integration is not configured.` };
-  const response = await composioFetch(`/v3.1/tools/execute/${encodeURIComponent(toolSlug)}`, { method: 'POST', body: JSON.stringify({ connected_account_id: connectedAccountId, user_id: 'bookly-user', arguments: arguments_ }) });
+  const lookup = toolLookup[name];
+  if (!lookup) return { error: `The ${name} integration is not configured.` };
+  const connectedAccountId = await findConnectedAccount(lookup.toolkit);
+  const toolSlug = await findToolSlug(lookup.toolkit, lookup.search);
+  if (!connectedAccountId || !toolSlug) return { error: `Connect ${lookup.toolkit} in Apps before using ${name}.` };
+  const response = await composioFetch(`/v3.1/tools/execute/${encodeURIComponent(toolSlug)}`, { method: 'POST', body: JSON.stringify({ connected_account_id: connectedAccountId, user_id: COMPOSIO_USER_ID, arguments: arguments_ }) });
   if (!response.ok) return { error: `The ${name} tool failed with status ${response.status}.` };
   return response.json();
+}
+
+async function findConnectedAccount(toolkit: string): Promise<string | null> {
+  const params = new URLSearchParams({ 'user_ids[]': COMPOSIO_USER_ID, 'toolkit_slugs[]': toolkit, limit: '100' });
+  const response = await composioFetch(`/v3.1/connected_accounts?${params}`);
+  if (!response.ok) return null;
+  const body = (await response.json()) as { items?: Array<{ id?: string; nanoid?: string; status?: string }>; connected_accounts?: Array<{ id?: string; nanoid?: string; status?: string }> };
+  const accounts = body.items ?? body.connected_accounts ?? [];
+  return accounts.find((account) => account.status !== 'FAILED' && (account.id || account.nanoid))?.id ?? accounts.find((account) => account.nanoid)?.nanoid ?? null;
+}
+
+async function findToolSlug(toolkit: string, search: string): Promise<string | null> {
+  const params = new URLSearchParams({ toolkit_slug: toolkit, search, limit: '100' });
+  const response = await composioFetch(`/v3/tools?${params}`);
+  if (!response.ok) return null;
+  const body = (await response.json()) as { items?: Array<{ slug?: string; name?: string; description?: string }>; tools?: Array<{ slug?: string; name?: string; description?: string }> };
+  const toolsForToolkit = body.items ?? body.tools ?? [];
+  return toolsForToolkit.find((tool) => tool.slug)?.slug ?? null;
 }
 
 async function sendReply(conversationId: string, accountId: string, message: string) {
