@@ -49,6 +49,7 @@ describe('POST /api/apps/connect', () => {
 
     expect(response.status).toBe(200);
     const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://backend.composio.dev/api/v3/connected_accounts/link');
     expect(JSON.parse(String(requestInit.body))).toMatchObject({
       callback_url: 'https://bookly-production.up.railway.app/apps/callback',
       auth_config_id: 'calendar-config',

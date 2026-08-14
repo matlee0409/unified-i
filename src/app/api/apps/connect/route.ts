@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   }
 
   const callbackUrl = new URL('/apps/callback', publicRequestOrigin(req)).toString();
-  const upstream = await composioFetch('/v3.1/connected_accounts/link', {
+  const upstream = await composioFetch('/v3/connected_accounts/link', {
     method: 'POST',
     body: JSON.stringify({
       auth_config_id: body.authConfigId,
