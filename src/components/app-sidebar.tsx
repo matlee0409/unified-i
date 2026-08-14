@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bot, CalendarDays, Inbox, LayoutDashboard, Link2, Menu, PanelLeftClose, Settings } from 'lucide-react';
+import { AppWindow, Bot, CalendarDays, Inbox, LayoutDashboard, Link2, Menu, PanelLeftClose, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useSidebar } from '@/components/sidebar-context';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ const navigation = [
   { label: 'Inbox', href: '/inbox', icon: Inbox },
   { label: 'Channels', href: '/channels', icon: Link2 },
   { label: 'Meeting bot', href: '/bot', icon: Bot },
+  { label: 'Apps', href: '/apps', icon: AppWindow },
 ];
 
 export function SidebarToggle() {
