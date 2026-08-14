@@ -53,6 +53,7 @@ describe('POST /api/apps/connect', () => {
       callback_url: 'https://bookly-production.up.railway.app/apps/callback',
       auth_config_id: 'calendar-config',
     });
+    expect(JSON.parse(String(requestInit.body))).not.toHaveProperty('alias');
   });
 
   it('returns a stable error when Composio omits the redirect URL', async () => {

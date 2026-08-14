@@ -22,7 +22,6 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       auth_config_id: body.authConfigId,
       user_id: body.userId,
-      alias: `${body.toolkit}-${body.userId}`,
       callback_url: callbackUrl,
     }),
   });
