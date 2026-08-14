@@ -10,7 +10,8 @@ type Toolkit = { slug?: string; name?: string; description?: string; logo?: stri
 type AuthConfig = { id?: string; uuid?: string; toolkit?: { slug?: string } | string; auth_scheme?: string; status?: string };
 
 function toolkitSlug(config: AuthConfig) {
-  return typeof config.toolkit === 'string' ? config.toolkit : config.toolkit?.slug;
+  const slug = typeof config.toolkit === 'string' ? config.toolkit : config.toolkit?.slug;
+  return slug?.toLowerCase();
 }
 
 export default function AppsPage() {
@@ -39,7 +40,7 @@ export default function AppsPage() {
   }), [toolkits, query]);
 
   async function connect(toolkit: Toolkit) {
-    const slug = toolkit.slug ?? '';
+    const slug = (toolkit.slug ?? '').toLowerCase();
     const config = authConfigs.find((item) => toolkitSlug(item) === slug && item.status !== 'DISABLED' && item.auth_scheme?.toUpperCase().includes('OAUTH'));
     if (!config?.id && !config?.uuid) {
       setError(`No enabled OAuth configuration is available for ${toolkit.name ?? slug}. Add one in Composio first.`);
