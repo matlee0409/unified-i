@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { SidebarToggle } from '@/components/app-sidebar';
 import { PlatformIcon, PLATFORM_LABELS } from '@/components/platform-icon';
 import { Button } from '@/components/ui/button';
 import { useAccounts } from '@/hooks/useAccounts';
@@ -24,7 +25,8 @@ export default function ChannelsPage() {
   return (
     <main className="h-dvh overflow-y-auto overscroll-contain bg-[var(--chat-canvas)] text-foreground">
       <header className="border-b border-[var(--chat-border)] bg-background">
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-start gap-4 px-4 sm:px-6 lg:px-8">
+          <SidebarToggle />
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Channels</h1>
             <p className="hidden text-sm text-muted-foreground sm:block">Connect the channels your customers use.</p>
