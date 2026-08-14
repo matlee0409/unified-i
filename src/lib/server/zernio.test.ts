@@ -96,7 +96,12 @@ describe('channel connect route', () => {
       .mockResolvedValueOnce(json({ authUrl: 'https://facebook.example/oauth' }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const response = await GET(new Request('https://inbox.example/api/connect/facebook'), {
+    const response = await GET(new Request('http://localhost:4100/api/connect/facebook', {
+      headers: {
+        'x-forwarded-host': 'inbox.example',
+        'x-forwarded-proto': 'https',
+      },
+    }), {
       params: Promise.resolve({ platform: 'facebook' }),
     });
 

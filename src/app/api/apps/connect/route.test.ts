@@ -72,4 +72,22 @@ describe('POST /api/apps/connect', () => {
     expect(response.status).toBe(502);
     await expect(response.json()).resolves.toMatchObject({ code: 'missing_composio_redirect' });
   });
+
+  it('returns a stable error when Composio responds with invalid JSON', async () => {
+    vi.stubEnv('COMPOSIO_API_KEY', 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>bad gateway</html>', { status: 502 })));
+
+    const response = await POST(new Request('https://bookly.example/api/apps/connect', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        authConfigId: 'calendar-config',
+        toolkit: 'googlecalendar',
+        userId: 'bookly-user',
+      }),
+    }));
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toMatchObject({ error: 'Composio returned an invalid response.' });
+  });
 });

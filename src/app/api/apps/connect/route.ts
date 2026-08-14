@@ -26,7 +26,11 @@ export async function POST(req: Request) {
       callback_url: callbackUrl,
     }),
   });
-  const payload = (await upstream.json()) as { redirect_url?: unknown; redirectUrl?: unknown; error?: unknown };
+  const payload = (await upstream.json().catch(() => ({ error: 'Composio returned an invalid response.' }))) as {
+    redirect_url?: unknown;
+    redirectUrl?: unknown;
+    error?: unknown;
+  };
   if (!upstream.ok) return NextResponse.json(payload, { status: upstream.status });
 
   const redirectUrl = payload.redirect_url ?? payload.redirectUrl;

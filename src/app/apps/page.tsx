@@ -45,11 +45,25 @@ export default function AppsPage() {
       setError(`No enabled OAuth configuration is available for ${toolkit.name ?? slug}. Add one in Composio first.`);
       return;
     }
+
     setConnecting(slug);
-    const response = await fetch('/api/apps/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ authConfigId: config.id ?? config.uuid, toolkit: slug, userId: 'bookly-user' }) });
-    const payload = await response.json();
-    if (response.ok && payload.redirectUrl) window.location.assign(payload.redirectUrl);
-    else { setError(payload.error ?? `Could not connect ${toolkit.name ?? slug}.`); setConnecting(''); }
+    try {
+      const response = await fetch('/api/apps/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authConfigId: config.id ?? config.uuid, toolkit: slug, userId: 'bookly-user' }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok && typeof payload.redirectUrl === 'string' && payload.redirectUrl) {
+        window.location.assign(payload.redirectUrl);
+        return;
+      }
+      setError(typeof payload.error === 'string' ? payload.error : `Could not connect ${toolkit.name ?? slug}.`);
+    } catch {
+      setError(`Could not reach Composio while connecting ${toolkit.name ?? slug}.`);
+    } finally {
+      setConnecting('');
+    }
   }
 
   return (
