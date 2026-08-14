@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bot, CalendarCheck2, Check, ChevronDown, Clock3, Info, MessageSquareText, Save, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react';
+import { Bot, CalendarCheck2, Check, ChevronDown, Clock3, Info, MessageSquareText, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,6 @@ export default function BotPage() {
       <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div><p className="text-sm text-muted-foreground">Automation</p><h1 className="text-lg font-semibold tracking-tight">Meeting bot</h1></div>
-          <Button onClick={saveConfiguration}>{saved ? <Check /> : <Save />}{saved ? 'Saved' : 'Save changes'}</Button>
         </div>
       </header>
 
