@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SidebarToggle } from '@/components/app-sidebar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -318,6 +319,7 @@ export function ConversationListPane({
       )}
     >
       <header className="flex h-14 flex-none items-center border-b border-[var(--chat-border)] px-4">
+        <SidebarToggle />
         <h1 className="text-base font-semibold tracking-tight">Inbox</h1>
         <div className="ml-auto flex items-center gap-0.5">
           {onNewMessage && (

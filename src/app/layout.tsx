@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { AppSidebar } from "@/components/app-sidebar";
 import { Providers } from "@/components/providers";
+import { SidebarProvider } from "@/components/sidebar-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -38,7 +40,14 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          <SidebarProvider>
+            <div className="flex min-h-dvh">
+              <AppSidebar />
+              <div className="min-w-0 flex-1">{children}</div>
+            </div>
+          </SidebarProvider>
+        </Providers>
       </body>
     </html>
   );
