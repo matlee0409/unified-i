@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MESSAGE_PLATFORMS } from '@/lib/capabilities';
+import { publicRequestOrigin } from '@/lib/server/composio';
 import { getOrCreateDefaultProfileId, hasApiKey, zernioFetch } from '@/lib/server/zernio';
 
 type ConnectResponse = { authUrl?: string };
@@ -23,7 +24,7 @@ export async function GET(
   if (profileResult instanceof Response) return profileResult;
   const profileId = profileResult;
 
-  const redirectUrl = new URL('/channels/callback', incoming.origin).toString();
+  const redirectUrl = new URL('/channels/callback', publicRequestOrigin(req)).toString();
   const params = new URLSearchParams({ profileId, redirect_url: redirectUrl });
   const upstream = await zernioFetch(`/v1/connect/${encodeURIComponent(platform)}?${params}`);
   if (!upstream.ok) return new Response(upstream.body, { status: upstream.status, headers: upstream.headers });
