@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '@/app/api/connect/[platform]/route';
-import { getOrCreateDefaultProfileId } from './zernio';
+import { getOrCreateDefaultProfileId, zernioFetch } from './zernio';
 
 function json(body: unknown, init?: ResponseInit): Response {
   return Response.json(body, init);
@@ -8,7 +8,19 @@ function json(body: unknown, init?: ResponseInit): Response {
 
 describe('getOrCreateDefaultProfileId', () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+  });
+
+  it('trims the configured API key before adding it to an upstream request', async () => {
+    vi.stubEnv('ZERNIO_API_KEY', '  test-key  ');
+    const fetchMock = vi.fn().mockResolvedValue(json({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await zernioFetch('/v1/profiles');
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(new Headers(init.headers).get('authorization')).toBe('Bearer test-key');
   });
 
   it('returns the first existing profile ID without creating one', async () => {
@@ -71,6 +83,7 @@ describe('getOrCreateDefaultProfileId', () => {
 
 describe('channel connect route', () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
 

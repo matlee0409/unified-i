@@ -1,5 +1,9 @@
 const BASE = (process.env.ZERNIO_API_URL || 'https://zernio.com/api').replace(/\/$/, '');
 
+function apiKey(): string {
+  return process.env.ZERNIO_API_KEY?.trim() ?? '';
+}
+
 // fetch() supports half-duplex streaming bodies but RequestInit doesn't declare `duplex` yet.
 interface DuplexRequestInit extends RequestInit {
   duplex: 'half';
@@ -18,7 +22,7 @@ export function zernioBase(): string {
 }
 
 export function hasApiKey(): boolean {
-  return Boolean(process.env.ZERNIO_API_KEY);
+  return Boolean(apiKey());
 }
 
 export function missingKeyResponse(): Response {
@@ -33,7 +37,7 @@ export function missingKeyResponse(): Response {
 
 export function zernioFetch(path: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers);
-  headers.set('Authorization', `Bearer ${process.env.ZERNIO_API_KEY}`);
+  headers.set('Authorization', `Bearer ${apiKey()}`);
   return fetch(`${BASE}${path}`, { ...init, headers, cache: 'no-store' });
 }
 
