@@ -51,6 +51,19 @@ function isEnabled(config: UnknownRecord): boolean {
   return !['DISABLED', 'INACTIVE', 'DELETED'].includes(status) && config.enabled !== false;
 }
 
+function connectedAccountToolkitSlug(account: UnknownRecord): string | null {
+  const authConfig = account.auth_config;
+  return toolkitSlug(account.toolkit)
+    ?? toolkitSlug(account.toolkit_slug)
+    ?? toolkitSlug(account.toolkitSlug)
+    ?? (isRecord(authConfig) ? configToolkitSlug(authConfig) : null);
+}
+
+function isConnected(account: UnknownRecord): boolean {
+  const status = typeof account.status === 'string' ? account.status.toUpperCase() : '';
+  return !['FAILED', 'EXPIRED', 'REVOKED', 'DISCONNECTED', 'DELETED', 'INACTIVE'].includes(status);
+}
+
 export function filterConfiguredApps(toolkitsBody: unknown, authConfigsBody: unknown) {
   const toolkits = recordsFrom(toolkitsBody, ['items', 'toolkits', 'data']);
   const authConfigs = recordsFrom(authConfigsBody, ['items', 'auth_configs', 'authConfigs', 'data'])
@@ -64,6 +77,27 @@ export function filterConfiguredApps(toolkitsBody: unknown, authConfigsBody: unk
       return slug !== null && configuredSlugs.has(slug);
     }),
     authConfigs,
+  };
+}
+
+export function filterConnectedApps(toolkitsBody: unknown, authConfigsBody: unknown, connectedAccountsBody: unknown) {
+  const configured = filterConfiguredApps(toolkitsBody, authConfigsBody);
+  const connectedSlugs = new Set(
+    recordsFrom(connectedAccountsBody, ['items', 'connected_accounts', 'connectedAccounts', 'data'])
+      .filter(isConnected)
+      .map(connectedAccountToolkitSlug)
+      .filter((slug): slug is string => slug !== null),
+  );
+
+  return {
+    toolkits: configured.toolkits.filter((toolkit) => {
+      const slug = toolkitSlug(toolkit);
+      return slug !== null && connectedSlugs.has(slug);
+    }),
+    authConfigs: configured.authConfigs.filter((config) => {
+      const slug = configToolkitSlug(config);
+      return slug !== null && connectedSlugs.has(slug);
+    }),
   };
 }
 
