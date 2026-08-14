@@ -36,16 +36,16 @@ export default function ChannelsPage() {
           <span className="text-sm text-muted-foreground">{MESSAGE_PLATFORMS.length} channels</span>
         </div>
 
-        <section className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
           {MESSAGE_PLATFORMS.map((platform) => (
-            <article key={platform} className="flex min-h-52 flex-col rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex size-11 items-center justify-center rounded-xl bg-muted"><PlatformIcon platform={platform} className="size-6" /></div>
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Check className="size-3.5 text-emerald-500" />Available</span>
+            <article key={platform} className="flex min-h-44 flex-col rounded-xl border border-[var(--chat-border)] bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-muted"><PlatformIcon platform={platform} className="size-5" /></div>
+                <span className="inline-flex items-center gap-1 text-[0.6875rem] font-medium text-muted-foreground"><Check className="size-3 text-emerald-500" />Available</span>
               </div>
-              <h3 className="mt-5 font-semibold">{PLATFORM_LABELS[platform]}</h3>
-              <p className="mt-1 flex-1 text-sm leading-6 text-muted-foreground">{channelDescriptions[platform]}</p>
-              <Button asChild variant="outline" className="mt-5 w-full bg-background"><a href={`/api/connect/${platform}`}>Add {PLATFORM_LABELS[platform]}</a></Button>
+              <h3 className="mt-3 text-sm font-semibold">{PLATFORM_LABELS[platform]}</h3>
+              <p className="mt-1 flex-1 text-xs leading-5 text-muted-foreground">{channelDescriptions[platform]}</p>
+              <Button asChild variant="outline" className="mt-3 w-full bg-background"><a href={`/api/connect/${platform}`}>Add {PLATFORM_LABELS[platform]}</a></Button>
             </article>
           ))}
         </section>
