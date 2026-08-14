@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { composioFetch, hasComposioKey } from '@/lib/server/composio';
+import { composioFetch, hasComposioKey, publicRequestOrigin } from '@/lib/server/composio';
 
 export async function POST(req: Request) {
   if (!hasComposioKey()) {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'authConfigId, toolkit, and userId are required.' }, { status: 400 });
   }
 
-  const callbackUrl = new URL('/apps/callback', req.url).toString();
+  const callbackUrl = new URL('/apps/callback', publicRequestOrigin(req)).toString();
   const upstream = await composioFetch('/v3.1/connected_accounts/link', {
     method: 'POST',
     body: JSON.stringify({
@@ -26,7 +26,15 @@ export async function POST(req: Request) {
       callback_url: callbackUrl,
     }),
   });
-  const payload = await upstream.json();
+  const payload = (await upstream.json()) as { redirect_url?: unknown; redirectUrl?: unknown; error?: unknown };
   if (!upstream.ok) return NextResponse.json(payload, { status: upstream.status });
-  return NextResponse.json({ redirectUrl: payload.redirect_url ?? payload.redirectUrl });
+
+  const redirectUrl = payload.redirect_url ?? payload.redirectUrl;
+  if (typeof redirectUrl !== 'string' || !redirectUrl) {
+    return NextResponse.json(
+      { error: 'Composio did not return an authorization URL.', code: 'missing_composio_redirect' },
+      { status: 502 },
+    );
+  }
+  return NextResponse.json({ redirectUrl });
 }

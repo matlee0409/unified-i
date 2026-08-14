@@ -10,3 +10,78 @@ export function composioFetch(path: string, init?: RequestInit) {
   headers.set('content-type', 'application/json');
   return fetch(`${COMPOSIO_BASE}${path}`, { ...init, headers, cache: 'no-store' });
 }
+
+type UnknownRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function recordsFrom(body: unknown, keys: string[]): UnknownRecord[] {
+  if (Array.isArray(body)) return body.filter(isRecord);
+  if (!isRecord(body)) return [];
+
+  for (const key of keys) {
+    const value = body[key];
+    if (Array.isArray(value)) return value.filter(isRecord);
+    if (isRecord(value)) {
+      const nested = recordsFrom(value, keys);
+      if (nested.length > 0) return nested;
+    }
+  }
+  return [];
+}
+
+function toolkitSlug(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim().toLowerCase();
+  if (!isRecord(value)) return null;
+  for (const key of ['slug', 'toolkit_slug', 'toolkitSlug', 'name']) {
+    const candidate = value[key];
+    if (typeof candidate === 'string' && candidate.trim()) return candidate.trim().toLowerCase();
+  }
+  return null;
+}
+
+function configToolkitSlug(config: UnknownRecord): string | null {
+  return toolkitSlug(config.toolkit) ?? toolkitSlug(config.toolkit_slug) ?? toolkitSlug(config.toolkitSlug);
+}
+
+function isEnabled(config: UnknownRecord): boolean {
+  const status = typeof config.status === 'string' ? config.status.toUpperCase() : '';
+  return !['DISABLED', 'INACTIVE', 'DELETED'].includes(status) && config.enabled !== false;
+}
+
+export function filterConfiguredApps(toolkitsBody: unknown, authConfigsBody: unknown) {
+  const toolkits = recordsFrom(toolkitsBody, ['items', 'toolkits', 'data']);
+  const authConfigs = recordsFrom(authConfigsBody, ['items', 'auth_configs', 'authConfigs', 'data'])
+    .filter(isEnabled)
+    .filter((config) => configToolkitSlug(config));
+  const configuredSlugs = new Set(authConfigs.map(configToolkitSlug));
+
+  return {
+    toolkits: toolkits.filter((toolkit) => {
+      const slug = toolkitSlug(toolkit);
+      return slug !== null && configuredSlugs.has(slug);
+    }),
+    authConfigs,
+  };
+}
+
+function firstForwardedValue(value: string | null): string {
+  return value?.split(',')[0]?.trim() ?? '';
+}
+
+export function publicRequestOrigin(req: Request): string {
+  const protocol = firstForwardedValue(req.headers.get('x-forwarded-proto')).toLowerCase();
+  const host = firstForwardedValue(req.headers.get('x-forwarded-host'));
+
+  if ((protocol === 'https' || protocol === 'http') && host && !/[\s/\\?#@]/.test(host)) {
+    try {
+      return new URL(`${protocol}://${host}`).origin;
+    } catch {
+      // Fall back to the request URL for local development or malformed proxy headers.
+    }
+  }
+
+  return new URL(req.url).origin;
+}
