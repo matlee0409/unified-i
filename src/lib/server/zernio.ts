@@ -37,6 +37,98 @@ export function zernioFetch(path: string, init?: RequestInit): Promise<Response>
   return fetch(`${BASE}${path}`, { ...init, headers, cache: 'no-store' });
 }
 
+type ProfileRecord = { _id?: unknown };
+type ProfilesEnvelope = { profiles?: unknown };
+
+function profileIdFromRecord(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null;
+  const id = (value as ProfileRecord)._id;
+  return typeof id === 'string' && id.length > 0 ? id : null;
+}
+
+function profileIdFromCreateBody(value: unknown): string | null {
+  const direct = profileIdFromRecord(value);
+  if (direct) return direct;
+  if (!value || typeof value !== 'object') return null;
+
+  const body = value as Record<string, unknown>;
+  for (const key of ['profile', 'data', 'existingProfile']) {
+    const id = profileIdFromRecord(body[key]);
+    if (id) return id;
+  }
+  return null;
+}
+
+async function readFirstProfileId(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as ProfilesEnvelope;
+    if (!Array.isArray(body.profiles)) return null;
+    for (const profile of body.profiles) {
+      const id = profileIdFromRecord(profile);
+      if (id) return id;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function profileSetupError(status: number, code: string, error: string): Response {
+  return Response.json({ error, code }, { status });
+}
+
+/** Return an existing Zernio profile ID, or provision the workspace's first profile. */
+export async function getOrCreateDefaultProfileId(): Promise<string | Response> {
+  const profilesResponse = await zernioFetch('/v1/profiles');
+  if (!profilesResponse.ok) return passthrough(profilesResponse);
+
+  const existingId = await readFirstProfileId(profilesResponse);
+  if (existingId) return existingId;
+
+  const createResponse = await zernioFetch('/v1/profiles', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'idempotency-key': crypto.randomUUID(),
+    },
+    body: JSON.stringify({ name: 'Unified Inbox' }),
+  });
+
+  if (createResponse.ok) {
+    try {
+      const createdId = profileIdFromCreateBody(await createResponse.json());
+      if (createdId) return createdId;
+    } catch {
+      // Handled by the stable malformed-response error below.
+    }
+    return profileSetupError(
+      502,
+      'invalid_profile_response',
+      'Zernio created a profile but did not return its ID.',
+    );
+  }
+
+  if (createResponse.status !== 409) return passthrough(createResponse);
+
+  try {
+    const conflictingId = profileIdFromCreateBody(await createResponse.clone().json());
+    if (conflictingId) return conflictingId;
+  } catch {
+    // A concurrent request may have created the profile; verify by listing again.
+  }
+
+  const retryResponse = await zernioFetch('/v1/profiles');
+  if (!retryResponse.ok) return passthrough(retryResponse);
+  const retryId = await readFirstProfileId(retryResponse);
+  if (retryId) return retryId;
+
+  return profileSetupError(
+    502,
+    'profile_creation_conflict',
+    'Zernio reported a profile conflict, but no profile could be found.',
+  );
+}
+
 function pickForwardHeaders(from: Headers): Headers {
   const headers = new Headers();
   for (const name of FORWARDED_HEADERS) {

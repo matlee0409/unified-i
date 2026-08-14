@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MESSAGE_PLATFORMS } from '@/lib/capabilities';
-import { hasApiKey, zernioFetch } from '@/lib/server/zernio';
+import { getOrCreateDefaultProfileId, hasApiKey, zernioFetch } from '@/lib/server/zernio';
 
 type ConnectResponse = { authUrl?: string };
 
@@ -18,10 +18,10 @@ export async function GET(
   }
 
   const incoming = new URL(req.url);
-  const profileId = incoming.searchParams.get('profileId') ?? (await getDefaultProfileId());
-  if (!profileId) {
-    return NextResponse.json({ error: 'Connect a Zernio profile before adding a channel.', code: 'missing_profile' }, { status: 400 });
-  }
+  const suppliedProfileId = incoming.searchParams.get('profileId')?.trim();
+  const profileResult = suppliedProfileId || (await getOrCreateDefaultProfileId());
+  if (profileResult instanceof Response) return profileResult;
+  const profileId = profileResult;
 
   const redirectUrl = new URL('/channels/callback', incoming.origin).toString();
   const params = new URLSearchParams({ profileId, redirect_url: redirectUrl });
@@ -33,11 +33,4 @@ export async function GET(
     return NextResponse.json({ error: 'Zernio did not return an authorization URL.', code: 'invalid_upstream_response' }, { status: 502 });
   }
   return NextResponse.redirect(body.authUrl);
-}
-
-async function getDefaultProfileId(): Promise<string | null> {
-  const response = await zernioFetch('/v1/profiles');
-  if (!response.ok) return null;
-  const body = (await response.json()) as { profiles?: Array<{ _id?: string }> };
-  return body.profiles?.find((profile) => profile._id)?.['_id'] ?? null;
 }
