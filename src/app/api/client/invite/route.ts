@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClientInvite, hasAdminSecret, hasInviteSecret, validAdminSecret } from '@/lib/server/client-auth';
+import { publicRequestOrigin } from '@/lib/server/composio';
 
 export async function POST(req: Request) {
   if (!hasAdminSecret()) return NextResponse.json({ error: 'BOOKLY_ADMIN_SECRET is not configured.' }, { status: 500 });
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
   }
 
   const token = createClientInvite(clientName);
-  const inviteUrl = new URL('/api/client/invite/accept', req.url);
+  const inviteUrl = new URL('/api/client/invite/accept', publicRequestOrigin(req));
   inviteUrl.searchParams.set('token', token);
   inviteUrl.searchParams.set('redirect', '/channels');
   return NextResponse.json({ inviteUrl: inviteUrl.toString() });
