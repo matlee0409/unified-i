@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Bot, CalendarCheck2, Check, ChevronDown, Clock3, Info, MessageSquareText, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react';
+import { SidebarToggle } from '@/components/app-sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,8 +26,9 @@ export default function BotPage() {
   return (
     <main className="h-dvh overflow-y-auto overscroll-contain touch-pan-y bg-[var(--chat-canvas)] text-foreground">
       <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur">
-        <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <div><h1 className="text-lg font-semibold tracking-tight">Meeting bot</h1></div>
+        <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-start gap-4 px-4 sm:px-6 lg:px-8">
+          <SidebarToggle />
+          <h1 className="text-lg font-semibold tracking-tight">Meeting bot</h1>
         </div>
       </header>
 
