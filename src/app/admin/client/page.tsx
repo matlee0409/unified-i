@@ -28,7 +28,7 @@ export default function ClientSignInPage() {
       return;
     }
     setError('');
-    window.location.assign(`/api/client/invite/accept?token=${encodeURIComponent(token)}&redirect=/home`);
+    window.location.assign(`/api/client/invite/accept?token=${encodeURIComponent(token)}&redirect=/channels`);
   }
 
   return (

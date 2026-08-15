@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { clientSessionCookie, createClientInvite } from '@/lib/server/client-auth';
 import { publicRequestOrigin } from '@/lib/server/composio';
 import { POST } from './route';
+
+function clientCookie() {
+  vi.stubEnv('BOOKLY_INVITE_SECRET', 'invite-secret');
+  return clientSessionCookie(createClientInvite('Acme Dental'));
+}
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -37,6 +43,7 @@ describe('POST /api/apps/connect', () => {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
+        cookie: clientCookie(),
         'x-forwarded-host': 'bookly-production.up.railway.app',
         'x-forwarded-proto': 'https',
       },
@@ -62,7 +69,7 @@ describe('POST /api/apps/connect', () => {
 
     const response = await POST(new Request('https://bookly.example/api/apps/connect', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', cookie: clientCookie() },
       body: JSON.stringify({
         authConfigId: 'calendar-config',
         toolkit: 'googlecalendar',
@@ -80,7 +87,7 @@ describe('POST /api/apps/connect', () => {
 
     const response = await POST(new Request('https://bookly.example/api/apps/connect', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', cookie: clientCookie() },
       body: JSON.stringify({
         authConfigId: 'calendar-config',
         toolkit: 'googlecalendar',

@@ -6,6 +6,7 @@ import BookingHomePage from './home-client';
 export default async function HomePage() {
   const cookieStore = await cookies();
   const session = cookieStore.get(CLIENT_SESSION_COOKIE)?.value;
-  if (!session || !readClientInvite(session)) redirect('/admin/client');
-  return <BookingHomePage />;
+  const invite = session ? readClientInvite(session) : null;
+  if (!invite) redirect('/admin/client');
+  return <BookingHomePage clientName={invite.clientName} />;
 }

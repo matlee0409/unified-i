@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { clientSessionCookie, readClientInvite } from '@/lib/server/client-auth';
+import { publicRequestOrigin } from '@/lib/server/composio';
 import { getOrCreateClientProfileId, hasApiKey } from '@/lib/server/zernio';
 
 export async function GET(req: Request) {
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
 
   const redirect = url.searchParams.get('redirect');
   const destination = redirect?.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
-  const response = NextResponse.redirect(new URL(destination, req.url));
+  const response = NextResponse.redirect(new URL(destination, publicRequestOrigin(req)));
   response.headers.append('Set-Cookie', clientSessionCookie(token));
   return response;
 }
