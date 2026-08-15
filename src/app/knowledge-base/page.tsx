@@ -25,23 +25,53 @@ export default function KnowledgeBasePage() {
   const [businessInformation, setBusinessInformation] = useState('');
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setBusinessInformation(localStorage.getItem(BUSINESS_INFO_KEY) ?? '');
+    const storedInformation = localStorage.getItem(BUSINESS_INFO_KEY) ?? '';
+    setBusinessInformation(storedInformation);
     try {
       const storedDocuments = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) ?? '[]') as KnowledgeDocument[];
       setDocuments(Array.isArray(storedDocuments) ? storedDocuments : []);
     } catch {
       setDocuments([]);
     }
+
+    fetch('/api/knowledge-base')
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Could not load the Knowledge base.');
+        return response.json() as Promise<{ knowledgeBase?: unknown }>;
+      })
+      .then((payload) => {
+        if (typeof payload.knowledgeBase === 'string' && payload.knowledgeBase) setBusinessInformation(payload.knowledgeBase);
+      })
+      .catch(() => undefined);
   }, []);
 
-  function saveKnowledgeBase() {
-    localStorage.setItem(BUSINESS_INFO_KEY, businessInformation);
-    localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(documents));
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2200);
+  async function saveKnowledgeBase() {
+    setSaving(true);
+    setSaveError('');
+    try {
+      const response = await fetch('/api/knowledge-base', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ knowledgeBase: businessInformation }),
+      });
+      const payload = await response.json().catch(() => ({})) as { knowledgeBase?: unknown; error?: unknown };
+      if (!response.ok) throw new Error(typeof payload.error === 'string' ? payload.error : 'Could not save the Knowledge base.');
+      const savedInformation = typeof payload.knowledgeBase === 'string' ? payload.knowledgeBase : businessInformation;
+      setBusinessInformation(savedInformation);
+      localStorage.setItem(BUSINESS_INFO_KEY, savedInformation);
+      localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(documents));
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2200);
+    } catch (reason) {
+      setSaveError(reason instanceof Error ? reason.message : 'Could not save the Knowledge base.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function addDocuments(event: React.ChangeEvent<HTMLInputElement>) {
@@ -137,8 +167,9 @@ export default function KnowledgeBasePage() {
             )}
           </section>
 
-          <div className="flex justify-end">
-            <Button onClick={saveKnowledgeBase}>{saved ? <><CheckCircle2 />Saved</> : 'Save knowledge base'}</Button>
+          <div className="flex items-center justify-end gap-3">
+            {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+            <Button onClick={() => void saveKnowledgeBase()} disabled={saving}>{saved ? <><CheckCircle2 />Saved</> : saving ? 'Saving…' : 'Save knowledge base'}</Button>
           </div>
         </div>
       </div>

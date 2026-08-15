@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { updateKnowledgeBase } from './bot-config';
 import { handleInboundMessage } from './meeting-bot';
 
 function json(body: unknown, init?: ResponseInit) {
@@ -6,6 +7,7 @@ function json(body: unknown, init?: ResponseInit) {
 }
 
 afterEach(() => {
+  updateKnowledgeBase('');
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -47,5 +49,20 @@ describe('handleInboundMessage', () => {
     expect(secondExecution[0]).toContain('/v3.1/tools/execute/GOOGLE_CALENDAR_CREATE_EVENT');
     expect(JSON.parse(String(secondExecution[1].body))).toMatchObject({ connected_account_id: 'calendar-account', arguments: { title: 'Demo' } });
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/v1/inbox/conversations/conversation-1/messages'), expect.anything());
+  });
+
+  it('includes saved business information in the system message', async () => {
+    vi.stubEnv('NVIDIA_API_KEY', 'nvidia-key');
+    vi.stubEnv('ZERNIO_API_KEY', 'zernio-key');
+    updateKnowledgeBase('We offer consultations Monday through Friday from 9am to 5pm.');
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(json({ choices: [{ message: { content: 'Thanks, I can help with that.' } }] }))
+      .mockResolvedValueOnce(json({ sent: true }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await handleInboundMessage({ conversationId: 'conversation-2', accountId: 'account-2', text: 'What are your hours?' });
+
+    const inference = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as { messages: Array<{ role: string; content: string }> };
+    expect(inference.messages[0]?.content).toContain('We offer consultations Monday through Friday from 9am to 5pm.');
   });
 });
