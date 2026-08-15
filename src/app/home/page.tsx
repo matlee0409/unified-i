@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, CheckCircle2, Clock3, Inbox, MessageSquare, Plus, Users } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Clock3, Inbox, MessageSquare, Users } from 'lucide-react';
 import { SidebarToggle } from '@/components/app-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -49,7 +49,7 @@ export default function BookingHomePage() {
 
   return (
     <main className="h-dvh overflow-y-auto bg-[var(--chat-canvas)] text-foreground">
-      <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8"><SidebarToggle /><Link href="/home" className="flex items-center gap-2.5" aria-label="Booking home"><BookingMark /><span className="text-base font-semibold tracking-tight">Bookly</span></Link><nav className="ml-5 hidden items-center gap-1 md:flex"><Link href="/home" className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground">Overview</Link><Link href="/apps" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Apps</Link><Link href="/inbox" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Messages</Link></nav><div className="ml-auto flex items-center gap-2"><ThemeToggle /><Button asChild className="hidden sm:inline-flex"><Link href="/apps"><Plus />Connect app</Link></Button><Button asChild size="icon" className="sm:hidden" aria-label="Connect app"><Link href="/apps"><Plus /></Link></Button></div></div></header>
+      <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8"><SidebarToggle /><Link href="/home" className="flex items-center gap-2.5" aria-label="Booking home"><BookingMark /><span className="text-base font-semibold tracking-tight">Bookly</span></Link><nav className="ml-5 hidden items-center gap-1 md:flex"><Link href="/home" className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground">Overview</Link><Link href="/apps" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Apps</Link><Link href="/inbox" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Messages</Link></nav><div className="ml-auto flex items-center gap-2"><ThemeToggle /></div></div></header>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-medium text-primary">Live overview</p><h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Good morning, Lee-Roy</h1><p className="mt-2 text-muted-foreground">Your connected channels and conversations, updated automatically.</p></div><Button asChild variant="outline" className="w-full bg-background sm:w-auto"><Link href="/inbox"><MessageSquare />Open inbox</Link></Button></section>
