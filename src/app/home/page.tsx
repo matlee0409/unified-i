@@ -25,7 +25,6 @@ function formatTime(value: string) {
 export default function BookingHomePage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +35,7 @@ export default function BookingHomePage() {
     ]).then(([accountData, conversationData]) => {
       setAccounts(accountData.accounts ?? []);
       setConversations(conversationData.conversations ?? []);
-    }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
+    }).catch(() => undefined).finally(() => setLoading(false));
   }, []);
 
   const unreadCount = useMemo(() => conversations.reduce((total, conversation) => total + (conversation.unreadCount ?? 0), 0), [conversations]);
@@ -55,7 +54,6 @@ export default function BookingHomePage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-medium text-primary">Live overview</p><h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Good morning, Lee-Roy</h1><p className="mt-2 text-muted-foreground">Your connected channels and conversations, updated automatically.</p></div><Button asChild variant="outline" className="w-full bg-background sm:w-auto"><Link href="/inbox"><MessageSquare />Open inbox</Link></Button></section>
 
-        {error && <section className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-5"><p className="font-medium">Connect your backend to see live results</p><p className="mt-1 text-sm text-muted-foreground">{error}</p><Button asChild className="mt-4"><Link href="/settings">Open settings</Link></Button></section>}
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><article className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm"><div className="flex items-start justify-between"><span className="text-sm text-muted-foreground">Connected channels</span><Users className="size-4 text-primary" /></div><p className="mt-4 text-3xl font-semibold tracking-tight">{loading ? '—' : activeAccounts.length}</p><p className="mt-1 text-sm text-muted-foreground">Accounts available to Bookly</p></article><article className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm"><div className="flex items-start justify-between"><span className="text-sm text-muted-foreground">Conversations</span><Inbox className="size-4 text-primary" /></div><p className="mt-4 text-3xl font-semibold tracking-tight">{loading ? '—' : conversations.length}</p><p className="mt-1 text-sm text-muted-foreground">Across connected channels</p></article><article className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm"><div className="flex items-start justify-between"><span className="text-sm text-muted-foreground">Unread messages</span><MessageSquare className="size-4 text-primary" /></div><p className="mt-4 text-3xl font-semibold tracking-tight">{loading ? '—' : unreadCount}</p><p className="mt-1 text-sm text-muted-foreground">Across connected channels</p></article><article className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm"><div className="flex items-start justify-between"><span className="text-sm text-muted-foreground">Bot status</span><CheckCircle2 className="size-4 text-primary" /></div><p className="mt-4 text-xl font-semibold tracking-tight">{process.env.NEXT_PUBLIC_BOT_ENABLED === 'true' ? 'Active' : 'Configured'}</p><p className="mt-1 text-sm text-muted-foreground">NVIDIA meeting assistant</p></article></section>
 
