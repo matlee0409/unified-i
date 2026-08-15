@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { Link2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ export default function ClientSignInPage() {
           <Button type="submit" className="w-full">Continue securely</Button>
         </form>
         <div className="mt-6 flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />You do not need a Zernio account. Your invite opens only your company workspace.</div>
+        <Link href="/admin/clients" className="mt-5 block text-center text-sm font-medium text-primary hover:underline">Administrator: generate a client invite</Link>
       </section>
     </main>
   );
