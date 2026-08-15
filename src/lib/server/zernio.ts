@@ -77,11 +77,55 @@ async function readFirstProfileId(response: Response): Promise<string | null> {
   return null;
 }
 
+async function readNamedProfileId(response: Response, name: string): Promise<string | null> {
+  try {
+    const body = (await response.json()) as { profiles?: Array<{ _id?: unknown; name?: unknown }> };
+    if (!Array.isArray(body.profiles)) return null;
+    const profile = body.profiles.find((value) => value.name === name);
+    return profile ? profileIdFromRecord(profile) : null;
+  } catch {
+    return null;
+  }
+}
+
 function profileSetupError(status: number, code: string, error: string): Response {
   return Response.json({ error, code }, { status });
 }
 
 /** Return an existing Zernio profile ID, or provision the workspace's first profile. */
+export async function getOrCreateClientProfileId(clientId: string): Promise<string | Response> {
+  const name = `Bookly Client ${clientId}`;
+  const profilesResponse = await zernioFetch('/v1/profiles');
+  if (!profilesResponse.ok) return passthrough(profilesResponse);
+  const existingId = await readNamedProfileId(profilesResponse, name);
+  if (existingId) return existingId;
+
+  const createResponse = await zernioFetch('/v1/profiles', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'idempotency-key': crypto.randomUUID(),
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (createResponse.ok) {
+    try {
+      const createdId = profileIdFromCreateBody(await createResponse.json());
+      if (createdId) return createdId;
+    } catch {
+      return profileSetupError(502, 'invalid_profile_response', 'Zernio returned an invalid client profile response.');
+    }
+    return profileSetupError(502, 'invalid_profile_response', 'Zernio created a client profile but did not return its ID.');
+  }
+  if (createResponse.status !== 409) return passthrough(createResponse);
+
+  const retryResponse = await zernioFetch('/v1/profiles');
+  if (!retryResponse.ok) return passthrough(retryResponse);
+  const retryId = await readNamedProfileId(retryResponse, name);
+  if (retryId) return retryId;
+  return profileSetupError(502, 'profile_creation_conflict', 'Zernio reported a client profile conflict, but no profile could be found.');
+}
+
 export async function getOrCreateDefaultProfileId(): Promise<string | Response> {
   const profilesResponse = await zernioFetch('/v1/profiles');
   if (!profilesResponse.ok) return passthrough(profilesResponse);

@@ -6,10 +6,10 @@ export const SETTINGS_COOKIE_NAME = 'unified-inbox-settings';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 const ACCOUNTS_CACHE_TTL_MS = 60 * 1000;
-let cache: {
+const cache = new Map<string, {
   data: { accounts: Account[]; profiles: Profile[] };
   expiresAt: number;
-} | null = null;
+}>();
 
 /**
  * Fetch connected accounts (filtered to messaging platforms) + profiles.
@@ -21,11 +21,14 @@ let cache: {
  * upstream). Error Responses are never cached. Pass `forceRefresh: true` to
  * bypass the cache (settings page data paths, where staleness is user-visible).
  */
-export async function fetchMessageAccounts(opts?: {
+export async function fetchMessageAccounts(opts: {
+  profileId: string;
   forceRefresh?: boolean;
 }): Promise<{ accounts: Account[]; profiles: Profile[] } | Response> {
-  if (!opts?.forceRefresh && cache && cache.expiresAt > Date.now()) {
-    return cache.data;
+  const cacheKey = opts.profileId;
+  const cached = cache.get(cacheKey);
+  if (!opts.forceRefresh && cached && cached.expiresAt > Date.now()) {
+    return cached.data;
   }
 
   const [accountsRes, profilesRes] = await Promise.all([
@@ -39,11 +42,17 @@ export async function fetchMessageAccounts(opts?: {
   const profilesBody = (await profilesRes.json()) as { profiles?: Profile[] };
 
   const accounts = (accountsBody.accounts ?? []).filter(
-    (a) =>
-      MESSAGE_PLATFORMS.includes(a.platform) && a.isActive !== false && a.enabled !== false,
+    (a) => {
+      const profileId = typeof a.profileId === 'string' ? a.profileId : a.profileId?._id;
+      return MESSAGE_PLATFORMS.includes(a.platform)
+        && a.isActive !== false
+        && a.enabled !== false
+        && profileId === opts.profileId;
+    },
   );
-  const data = { accounts, profiles: profilesBody.profiles ?? [] };
-  cache = { data, expiresAt: Date.now() + ACCOUNTS_CACHE_TTL_MS };
+  const profiles = (profilesBody.profiles ?? []).filter((profile) => profile._id === opts.profileId);
+  const data = { accounts, profiles };
+  cache.set(cacheKey, { data, expiresAt: Date.now() + ACCOUNTS_CACHE_TTL_MS });
   return data;
 }
 
