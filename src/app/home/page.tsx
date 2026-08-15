@@ -49,7 +49,7 @@ export default function BookingHomePage() {
   }
 
   return (
-    <main className="min-h-dvh overflow-y-auto bg-[var(--chat-canvas)] text-foreground">
+    <main className="h-dvh overflow-y-auto bg-[var(--chat-canvas)] text-foreground">
       <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8"><SidebarToggle /><Link href="/home" className="flex items-center gap-2.5" aria-label="Booking home"><BookingMark /><span className="text-base font-semibold tracking-tight">Bookly</span></Link><nav className="ml-5 hidden items-center gap-1 md:flex"><Link href="/home" className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground">Overview</Link><Link href="/apps" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Apps</Link><Link href="/inbox" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Messages</Link></nav><div className="ml-auto flex items-center gap-2"><ThemeToggle /><Button asChild className="hidden sm:inline-flex"><Link href="/apps"><Plus />Connect app</Link></Button><Button asChild size="icon" className="sm:hidden" aria-label="Connect app"><Link href="/apps"><Plus /></Link></Button></div></div></header>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
