@@ -54,7 +54,7 @@ export default function AppsPage() {
       const response = await fetch('/api/apps/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authConfigId: config.id ?? config.uuid, toolkit: slug, userId: 'bookly-user' }),
+        body: JSON.stringify({ authConfigId: config.id ?? config.uuid, toolkit: slug }),
       });
       const payload = await response.json().catch(() => ({}));
       if (response.ok && typeof payload.redirectUrl === 'string' && payload.redirectUrl) {
