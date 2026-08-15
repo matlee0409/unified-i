@@ -26,7 +26,6 @@ export default function BookingHomePage({ clientName }: { clientName: string }) 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -41,12 +40,6 @@ export default function BookingHomePage({ clientName }: { clientName: string }) 
   const unreadCount = useMemo(() => conversations.reduce((total, conversation) => total + (conversation.unreadCount ?? 0), 0), [conversations]);
   const activeAccounts = accounts.filter((account) => account.isActive !== false && account.enabled !== false);
 
-  async function copyBookingLink() {
-    await navigator.clipboard?.writeText(`${window.location.origin}/book/lee-roy`);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
-  }
-
   return (
     <main className="h-dvh overflow-y-auto bg-[var(--chat-canvas)] text-foreground">
       <header className="sticky top-0 z-10 border-b border-[var(--chat-border)] bg-background/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8"><SidebarToggle /><Link href="/home" className="flex items-center gap-2.5" aria-label="Booking home"><BookingMark /><span className="text-base font-semibold tracking-tight">Bookly</span></Link><nav className="ml-5 hidden items-center gap-1 md:flex"><Link href="/home" className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground">Overview</Link><Link href="/apps" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Apps</Link><Link href="/inbox" className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Messages</Link></nav><div className="ml-auto flex items-center gap-2"><ThemeToggle /></div></div></header>
@@ -59,7 +52,7 @@ export default function BookingHomePage({ clientName }: { clientName: string }) 
 
         <section id="schedule" className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.9fr)]"><article className="rounded-xl border border-[var(--chat-border)] bg-card shadow-sm"><div className="flex items-center justify-between border-b border-[var(--chat-border)] p-5"><div><h2 className="font-semibold tracking-tight">Recent conversations</h2><p className="mt-1 text-sm text-muted-foreground">Recent activity across your channels</p></div><Button asChild variant="ghost" size="sm"><Link href="/inbox">View inbox</Link></Button></div>{!loading && conversations.length === 0 ? <div className="p-10 text-center"><Inbox className="mx-auto size-8 text-muted-foreground/50" /><p className="mt-3 text-sm font-medium">No conversations returned</p><p className="mt-1 text-sm text-muted-foreground">Connect a channel to start receiving customer messages.</p></div> : <div className="divide-y divide-[var(--chat-border)]">{conversations.slice(0, 6).map((conversation) => <Link href={`/inbox?conversation=${conversation.accountId}:${conversation.id}`} key={`${conversation.accountId}:${conversation.id}`} className="flex items-center gap-4 p-5 transition-colors hover:bg-[var(--chat-hover)]"><Avatar className="size-10"><AvatarFallback>{initials(conversation.participantName ?? conversation.participantUsername)}</AvatarFallback></Avatar><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{conversation.participantName ?? conversation.participantUsername ?? 'Unknown contact'}</p><p className="mt-0.5 truncate text-sm text-muted-foreground">{conversation.lastMessage}</p></div><div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">{conversation.unreadCount ? <span className="rounded-full bg-primary px-2 py-0.5 text-primary-foreground">{conversation.unreadCount}</span> : null}<time>{formatTime(conversation.updatedTime)}</time></div></Link>)}</div>}</article>
 
-          <div className="space-y-6"><article className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm"><div className="flex items-center justify-between"><div><h2 className="font-semibold tracking-tight">Booking link</h2><p className="mt-1 text-sm text-muted-foreground">Connect a calendar app to enable bookings.</p></div><CalendarDays className="size-5 text-primary" /></div><div className="mt-4 flex items-center gap-2 rounded-lg border bg-muted/50 p-2 pl-3"><span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{typeof window !== 'undefined' ? `${window.location.host}/book/lee-roy` : 'bookly.app/book/lee-roy'}</span><Button size="sm" variant="secondary" onClick={() => void copyBookingLink()}>{copied ? 'Copied' : 'Copy'}</Button></div></article><article className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm"><div className="flex items-center gap-3"><Clock3 className="size-5 text-primary" /><div><h2 className="font-semibold tracking-tight">Calendar availability</h2><p className="mt-1 text-sm text-muted-foreground">No calendar connected yet.</p></div></div><Button asChild variant="outline" className="mt-5 w-full bg-background"><Link href="/apps">Connect Google Calendar</Link></Button></article></div></section>
+          <div className="space-y-6"><article className="rounded-xl border border-[var(--chat-border)] bg-card p-5 shadow-sm"><div className="flex items-center gap-3"><Clock3 className="size-5 text-primary" /><div><h2 className="font-semibold tracking-tight">Calendar availability</h2><p className="mt-1 text-sm text-muted-foreground">No calendar connected yet.</p></div></div><Button asChild variant="outline" className="mt-5 w-full bg-background"><Link href="/apps">Connect Google Calendar</Link></Button></article></div></section>
       </div>
     </main>
   );
