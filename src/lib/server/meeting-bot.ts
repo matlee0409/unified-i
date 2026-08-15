@@ -1,13 +1,12 @@
 import { composioFetch, hasComposioKey } from './composio';
 import { getBotConfiguration } from './bot-config';
-import { zernioFetch } from './zernio';
+import { getClientIdForAccount, zernioFetch } from './zernio';
 
 const NVIDIA_URL = process.env.NVIDIA_API_URL ?? 'https://integrate.api.nvidia.com/v1/chat/completions';
 const MODEL = process.env.NVIDIA_MODEL ?? 'minimaxai/minimax-m3';
 const THINKING_MODE = process.env.NVIDIA_THINKING_MODE ?? 'enabled';
 const MAX_TOKENS = Number(process.env.NVIDIA_MAX_TOKENS ?? 1200);
 const MAX_TOOL_ROUNDS = 6;
-const COMPOSIO_USER_ID = 'bookly-user';
 
 interface RecordValue {
   [key: string]: unknown;
@@ -129,10 +128,10 @@ function toolDefinition(tool: ComposioTool): RecordValue | null {
   };
 }
 
-export async function discoverConnectedTools(): Promise<DiscoveredTool[]> {
-  if (!hasComposioKey()) return [];
+export async function discoverConnectedTools(clientId: string | null): Promise<DiscoveredTool[]> {
+  if (!hasComposioKey() || !clientId) return [];
 
-  const accountsResponse = await composioFetch(`/v3.1/connected_accounts?user_ids[]=${encodeURIComponent(COMPOSIO_USER_ID)}&limit=1000`);
+  const accountsResponse = await composioFetch(`/v3.1/connected_accounts?user_ids[]=${encodeURIComponent(clientId)}&limit=1000`);
   if (!accountsResponse.ok) return [];
   const accounts = recordsFrom(await accountsResponse.json(), ['items', 'connected_accounts', 'connectedAccounts', 'data']) as ConnectedAccount[];
   const accountsByToolkit = new Map<string, string>();
@@ -158,7 +157,8 @@ export async function discoverConnectedTools(): Promise<DiscoveredTool[]> {
 
 export async function handleInboundMessage(input: { conversationId: string; accountId: string; text: string; senderName?: string }) {
   if (!process.env.NVIDIA_API_KEY) throw new Error('NVIDIA_API_KEY is not configured');
-  const discoveredTools = await discoverConnectedTools();
+  const clientId = hasComposioKey() ? await getClientIdForAccount(input.accountId) : null;
+  const discoveredTools = await discoverConnectedTools(clientId);
   const configuration = getBotConfiguration();
   const systemMessage = [
     configuration.systemPrompt,
@@ -192,7 +192,7 @@ export async function handleInboundMessage(input: { conversationId: string; acco
         messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify({ error: 'The tool arguments were not valid JSON.' }) });
         continue;
       }
-      const result = await executeTool(call.function.name, arguments_, toolsBySlug);
+      const result = await executeTool(call.function.name, arguments_, toolsBySlug, clientId);
       messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) });
     }
     response = await infer(messages, tools);
@@ -220,13 +220,13 @@ async function infer(messages: Array<RecordValue>, tools: RecordValue[]) {
   return (await response.json()) as ModelResponse;
 }
 
-async function executeTool(name: string, arguments_: RecordValue, toolsBySlug: Map<string, DiscoveredTool>) {
-  if (!hasComposioKey()) return { error: 'The business integration is not connected yet.' };
+async function executeTool(name: string, arguments_: RecordValue, toolsBySlug: Map<string, DiscoveredTool>, clientId: string | null) {
+  if (!hasComposioKey() || !clientId) return { error: 'The business integration is not connected yet.' };
   const tool = toolsBySlug.get(name);
   if (!tool) return { error: `The ${name} tool is not available from a connected toolkit.` };
   const response = await composioFetch(`/v3.1/tools/execute/${encodeURIComponent(tool.slug)}`, {
     method: 'POST',
-    body: JSON.stringify({ connected_account_id: tool.connectedAccountId, user_id: COMPOSIO_USER_ID, arguments: arguments_ }),
+    body: JSON.stringify({ connected_account_id: tool.connectedAccountId, user_id: clientId, arguments: arguments_ }),
   });
   if (!response.ok) return { error: `The ${name} tool failed with status ${response.status}.` };
   return response.json();

@@ -19,6 +19,8 @@ describe('handleInboundMessage', () => {
     vi.stubEnv('ZERNIO_API_KEY', 'zernio-key');
     const fetchMock = vi
       .fn()
+      .mockResolvedValueOnce(json({ accounts: [{ _id: 'account-1', profileId: 'profile-client' }] }))
+      .mockResolvedValueOnce(json({ profiles: [{ _id: 'profile-client', name: 'Bookly Client client-1' }] }))
       .mockResolvedValueOnce(json({ items: [{ id: 'calendar-account', toolkit: { slug: 'googlecalendar' }, status: 'ACTIVE' }] }))
       .mockResolvedValueOnce(json({
         items: [
@@ -36,18 +38,19 @@ describe('handleInboundMessage', () => {
 
     await expect(handleInboundMessage({ conversationId: 'conversation-1', accountId: 'account-1', text: 'Book a demo.' })).resolves.toEqual({ message: 'Your meeting is booked.' });
 
-    const firstInference = JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body)) as { tools: Array<{ function: { name: string; parameters: Record<string, unknown> } }>; chat_template_kwargs: { thinking_mode: string } };
+    expect(fetchMock.mock.calls[2]?.[0]).toContain('user_ids[]=client-1');
+    const firstInference = JSON.parse(String(fetchMock.mock.calls[4]?.[1]?.body)) as { tools: Array<{ function: { name: string; parameters: Record<string, unknown> } }>; chat_template_kwargs: { thinking_mode: string } };
     expect(firstInference.tools.map((tool) => tool.function.name)).toEqual(['GOOGLE_CALENDAR_FIND_EVENT', 'GOOGLE_CALENDAR_CREATE_EVENT']);
     expect(firstInference.tools[0]?.function.parameters).toMatchObject({ type: 'object', required: ['date'] });
     expect(firstInference.chat_template_kwargs).toEqual({ thinking_mode: 'enabled' });
 
-    const firstExecution = fetchMock.mock.calls[3] as [string, RequestInit];
+    const firstExecution = fetchMock.mock.calls[5] as [string, RequestInit];
     expect(firstExecution[0]).toContain('/v3.1/tools/execute/GOOGLE_CALENDAR_FIND_EVENT');
-    expect(JSON.parse(String(firstExecution[1].body))).toMatchObject({ connected_account_id: 'calendar-account', arguments: { date: '2026-04-10' } });
+    expect(JSON.parse(String(firstExecution[1].body))).toMatchObject({ connected_account_id: 'calendar-account', user_id: 'client-1', arguments: { date: '2026-04-10' } });
 
-    const secondExecution = fetchMock.mock.calls[5] as [string, RequestInit];
+    const secondExecution = fetchMock.mock.calls[7] as [string, RequestInit];
     expect(secondExecution[0]).toContain('/v3.1/tools/execute/GOOGLE_CALENDAR_CREATE_EVENT');
-    expect(JSON.parse(String(secondExecution[1].body))).toMatchObject({ connected_account_id: 'calendar-account', arguments: { title: 'Demo' } });
+    expect(JSON.parse(String(secondExecution[1].body))).toMatchObject({ connected_account_id: 'calendar-account', user_id: 'client-1', arguments: { title: 'Demo' } });
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/v1/inbox/conversations/conversation-1/messages'), expect.anything());
   });
 
