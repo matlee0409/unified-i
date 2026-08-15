@@ -1,11 +1,37 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '@/app/api/connect/[platform]/route';
 import { clientSessionCookie, createClientInvite } from './client-auth';
-import { getOrCreateDefaultProfileId, zernioFetch } from './zernio';
+import { getClientIdForAccount, getOrCreateDefaultProfileId, zernioFetch } from './zernio';
 
 function json(body: unknown, init?: ResponseInit): Response {
   return Response.json(body, init);
 }
+
+describe('getClientIdForAccount', () => {
+  it('returns the client ID encoded in the account profile name', async () => {
+    vi.stubEnv('ZERNIO_API_KEY', 'test-key');
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json({ accounts: [{ _id: 'account-client', profileId: { _id: 'profile-client' } }] }))
+      .mockResolvedValueOnce(json({ profiles: [{ _id: 'profile-client', name: 'Bookly Client client-1' }] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(getClientIdForAccount('account-client')).resolves.toBe('client-1');
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/v1/accounts'), expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/v1/profiles'), expect.anything());
+  });
+
+  it('does not resolve a non-client profile to a Composio identity', async () => {
+    vi.stubEnv('ZERNIO_API_KEY', 'test-key');
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json({ accounts: [{ _id: 'account-owner', profileId: 'profile-owner' }] }))
+      .mockResolvedValueOnce(json({ profiles: [{ _id: 'profile-owner', name: 'Unified Inbox' }] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(getClientIdForAccount('account-owner')).resolves.toBeNull();
+  });
+});
 
 describe('getOrCreateDefaultProfileId', () => {
   afterEach(() => {

@@ -126,6 +126,49 @@ export async function getOrCreateClientProfileId(clientId: string): Promise<stri
   return profileSetupError(502, 'profile_creation_conflict', 'Zernio reported a client profile conflict, but no profile could be found.');
 }
 
+export async function getClientIdForAccount(accountId: string): Promise<string | null> {
+  if (!hasApiKey()) return null;
+
+  const [accountsResponse, profilesResponse] = await Promise.all([
+    zernioFetch('/v1/accounts'),
+    zernioFetch('/v1/profiles'),
+  ]);
+  if (!accountsResponse.ok || !profilesResponse.ok) return null;
+
+  try {
+    const accountsBody = (await accountsResponse.json()) as { accounts?: unknown };
+    const profilesBody = (await profilesResponse.json()) as { profiles?: unknown };
+    const account = Array.isArray(accountsBody.accounts)
+      ? accountsBody.accounts.find((value) => {
+        if (!value || typeof value !== 'object') return false;
+        const candidate = value as { _id?: unknown; id?: unknown };
+        return candidate._id === accountId || candidate.id === accountId;
+      })
+      : null;
+    if (!account || typeof account !== 'object') return null;
+
+    const profileValue = (account as { profileId?: unknown }).profileId;
+    const profileId = typeof profileValue === 'string'
+      ? profileValue
+      : profileValue && typeof profileValue === 'object' && typeof (profileValue as { _id?: unknown })._id === 'string'
+        ? (profileValue as { _id: string })._id
+        : null;
+    if (!profileId || !Array.isArray(profilesBody.profiles)) return null;
+
+    const profile = profilesBody.profiles.find((value) => {
+      if (!value || typeof value !== 'object') return false;
+      return (value as { _id?: unknown })._id === profileId;
+    });
+    const name = profile && typeof profile === 'object' ? (profile as { name?: unknown }).name : null;
+    const prefix = 'Bookly Client ';
+    return typeof name === 'string' && name.startsWith(prefix) && name.length > prefix.length
+      ? name.slice(prefix.length)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getOrCreateDefaultProfileId(): Promise<string | Response> {
   const profilesResponse = await zernioFetch('/v1/profiles');
   if (!profilesResponse.ok) return passthrough(profilesResponse);
