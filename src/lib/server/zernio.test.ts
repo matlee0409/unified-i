@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '@/app/api/connect/[platform]/route';
+import { clientSessionCookie, createClientInvite } from './client-auth';
 import { getOrCreateDefaultProfileId, zernioFetch } from './zernio';
 
 function json(body: unknown, init?: ResponseInit): Response {
@@ -89,10 +90,14 @@ describe('channel connect route', () => {
 
   it('creates a profile and redirects to the Zernio authorization URL', async () => {
     vi.stubEnv('ZERNIO_API_KEY', 'test-key');
+    vi.stubEnv('BOOKLY_INVITE_SECRET', 'invite-secret');
+    const invite = createClientInvite('Test client');
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(json({ profiles: [] }))
       .mockResolvedValueOnce(json({ _id: 'profile-created' }, { status: 201 }))
+      .mockResolvedValueOnce(json({ accounts: [] }))
+      .mockResolvedValueOnce(json({ profiles: [] }))
       .mockResolvedValueOnce(json({ authUrl: 'https://facebook.example/oauth' }));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -100,6 +105,7 @@ describe('channel connect route', () => {
       headers: {
         'x-forwarded-host': 'inbox.example',
         'x-forwarded-proto': 'https',
+        cookie: clientSessionCookie(invite),
       },
     }), {
       params: Promise.resolve({ platform: 'facebook' }),
@@ -107,7 +113,7 @@ describe('channel connect route', () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('https://facebook.example/oauth');
-    expect(String(fetchMock.mock.calls[2][0])).toContain(
+    expect(String(fetchMock.mock.calls[4][0])).toContain(
       '/v1/connect/facebook?profileId=profile-created&redirect_url=https%3A%2F%2Finbox.example%2Fchannels%2Fcallback',
     );
   });

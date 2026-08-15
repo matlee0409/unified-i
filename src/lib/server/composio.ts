@@ -80,14 +80,18 @@ export function filterConfiguredApps(toolkitsBody: unknown, authConfigsBody: unk
   };
 }
 
-export function filterConnectedApps(toolkitsBody: unknown, authConfigsBody: unknown, connectedAccountsBody: unknown) {
-  const configured = filterConfiguredApps(toolkitsBody, authConfigsBody);
-  const connectedSlugs = new Set(
+export function connectedToolkitSlugs(connectedAccountsBody: unknown): string[] {
+  return [...new Set(
     recordsFrom(connectedAccountsBody, ['items', 'connected_accounts', 'connectedAccounts', 'data'])
       .filter(isConnected)
       .map(connectedAccountToolkitSlug)
       .filter((slug): slug is string => slug !== null),
-  );
+  )];
+}
+
+export function filterConnectedApps(toolkitsBody: unknown, authConfigsBody: unknown, connectedAccountsBody: unknown) {
+  const configured = filterConfiguredApps(toolkitsBody, authConfigsBody);
+  const connectedSlugs = new Set(connectedToolkitSlugs(connectedAccountsBody));
 
   return {
     toolkits: configured.toolkits.filter((toolkit) => {

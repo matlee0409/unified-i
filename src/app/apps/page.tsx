@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { SidebarToggle } from '@/components/app-sidebar';
-import { AppWindow, Check, Loader2, Plug, Search } from 'lucide-react';
+import { AppWindow, Loader2, Plug, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -17,6 +17,7 @@ function toolkitSlug(config: AuthConfig) {
 export default function AppsPage() {
   const [toolkits, setToolkits] = useState<Toolkit[]>([]);
   const [authConfigs, setAuthConfigs] = useState<AuthConfig[]>([]);
+  const [connectedSlugs, setConnectedSlugs] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,6 +30,7 @@ export default function AppsPage() {
         if (!response.ok) throw new Error(payload.error ?? 'Could not load Composio apps.');
         setToolkits(payload.toolkits ?? []);
         setAuthConfigs(payload.authConfigs ?? []);
+        setConnectedSlugs(payload.connectedSlugs ?? []);
       })
       .catch((reason: Error) => setError(reason.message))
       .finally(() => setLoading(false));
@@ -73,7 +75,7 @@ export default function AppsPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-xl font-semibold tracking-tight">Configured apps</h2><p className="mt-1 text-sm text-muted-foreground">Apps enabled in your Composio auth configurations.</p></div><div className="relative w-full sm:w-72"><Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps" className="pl-9" /></div></div>
         {error && <div className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
-        {loading ? <div className="flex justify-center py-16"><Loader2 className="size-6 animate-spin text-primary" /></div> : visibleToolkits.length === 0 && !error ? <div className="mt-6 rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">No apps match your search.</div> : <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">{visibleToolkits.map((toolkit) => { const slug = toolkit.slug ?? ''; const logo = toolkit.logo ?? toolkit.image; return <article key={slug} className="flex min-h-44 flex-col rounded-xl border border-[var(--chat-border)] bg-card p-4 shadow-sm"><div className="flex items-start justify-between gap-2"><div className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-muted">{logo ? <img src={logo} alt="" className="size-6 object-contain" /> : <AppWindow className="size-5 text-muted-foreground" />}</div><span className="inline-flex items-center gap-1 text-[0.6875rem] text-muted-foreground"><Check className="size-3 text-emerald-500" />Composio</span></div><h3 className="mt-3 text-sm font-semibold">{toolkit.name ?? slug}</h3><p className="mt-1 flex-1 text-xs leading-5 text-muted-foreground">{toolkit.description ?? `Use ${toolkit.name ?? slug} with your meeting assistant.`}</p><Button className="mt-3 w-full" onClick={() => void connect(toolkit)} disabled={connecting === slug}>{connecting === slug ? <Loader2 className="animate-spin" /> : <Plug />}Connect</Button></article>; })}</section>}
+        {loading ? <div className="flex justify-center py-16"><Loader2 className="size-6 animate-spin text-primary" /></div> : visibleToolkits.length === 0 && !error ? <div className="mt-6 rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">No apps match your search.</div> : <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">{visibleToolkits.map((toolkit) => { const slug = (toolkit.slug ?? '').toLowerCase(); const logo = toolkit.logo ?? toolkit.image; const isConnected = connectedSlugs.includes(slug); return <article key={slug} className="flex min-h-44 flex-col rounded-xl border border-[var(--chat-border)] bg-card p-4 shadow-sm"><div className="flex items-start justify-between gap-2"><div className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-muted">{logo ? <img src={logo} alt="" className="size-6 object-contain" /> : <AppWindow className="size-5 text-muted-foreground" />}</div></div><h3 className="mt-3 text-sm font-semibold">{toolkit.name ?? slug}</h3><p className="mt-1 flex-1 text-xs leading-5 text-muted-foreground">{toolkit.description ?? `Use ${toolkit.name ?? slug} with your meeting assistant.`}</p><Button className="mt-3 w-full" onClick={() => void connect(toolkit)} disabled={isConnected || connecting === slug}>{connecting === slug ? <Loader2 className="animate-spin" /> : <Plug />} {isConnected ? 'Connected' : 'Connect'}</Button></article>; })}</section>}
       </div>
     </main>
   );

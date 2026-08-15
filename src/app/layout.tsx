@@ -42,9 +42,9 @@ export default function RootLayout({
       <body className="antialiased">
         <Providers>
           <SidebarProvider>
-            <div className="flex min-h-dvh">
+            <div className="flex h-dvh overflow-hidden">
               <AppSidebar />
-              <div className="min-w-0 flex-1">{children}</div>
+              <div className="min-h-0 min-w-0 flex-1">{children}</div>
             </div>
           </SidebarProvider>
         </Providers>

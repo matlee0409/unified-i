@@ -1,3 +1,4 @@
+import { getClientContext } from '@/lib/server/client-auth';
 import { fetchMessageAccounts, readSettings } from '@/lib/server/settings';
 import {
   forwardQuery,
@@ -11,6 +12,15 @@ import {
 
 export async function GET(req: Request) {
   if (!hasApiKey()) return missingKeyResponse();
+  const client = await getClientContext(req);
+  if (client instanceof Response) return client;
+  const accountsResult = await fetchMessageAccounts({ profileId: client.profileId });
+  if (accountsResult instanceof Response) return accountsResult;
+  const allowedAccountIds = new Set(accountsResult.accounts.map((account) => account._id));
+  const requestedAccountId = new URL(req.url).searchParams.get('accountId');
+  if (requestedAccountId && !allowedAccountIds.has(requestedAccountId)) {
+    return Response.json({ error: 'That account is not available to this client.' }, { status: 403 });
+  }
 
   const qs = forwardQuery(req, ['platform', 'accountId', 'status', 'sortOrder', 'limit', 'cursor']);
   const upstream = await zernioFetch(`/v1/inbox/conversations${qs}`);
@@ -20,10 +30,8 @@ export async function GET(req: Request) {
   // apply the cookie-selected account set server-side.
   if (new URL(req.url).searchParams.has('accountId')) return passthrough(upstream);
 
-  const result = await fetchMessageAccounts();
-  if (result instanceof Response) return result;
   const { selectedAccountIds } = readSettings({
-    accounts: result.accounts,
+    accounts: accountsResult.accounts,
     cookieHeader: req.headers.get('cookie'),
   });
   const selected = new Set(selectedAccountIds);
@@ -38,5 +46,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   if (!hasApiKey()) return missingKeyResponse();
+  const client = await getClientContext(req);
+  if (client instanceof Response) return client;
+  const accountsResult = await fetchMessageAccounts({ profileId: client.profileId });
+  if (accountsResult instanceof Response) return accountsResult;
+  const allowedAccountIds = new Set(accountsResult.accounts.map((account) => account._id));
+  const body = await req.clone().json().catch(() => null) as Record<string, unknown> | null;
+  if (typeof body?.accountId === 'string' && !allowedAccountIds.has(body.accountId)) {
+    return Response.json({ error: 'That account is not available to this client.' }, { status: 403 });
+  }
   return proxy({ req, path: '/v1/inbox/conversations', method: 'POST', jsonBody: true });
 }

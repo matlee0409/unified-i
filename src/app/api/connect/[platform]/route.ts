@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { getClientContext } from '@/lib/server/client-auth';
+import { fetchMessageAccounts } from '@/lib/server/settings';
 import { MESSAGE_PLATFORMS } from '@/lib/capabilities';
 import { publicRequestOrigin } from '@/lib/server/composio';
-import { getOrCreateDefaultProfileId, hasApiKey, zernioFetch } from '@/lib/server/zernio';
+import { hasApiKey, zernioFetch } from '@/lib/server/zernio';
 
 type ConnectResponse = { authUrl?: string };
 
@@ -18,12 +20,18 @@ export async function GET(
     return NextResponse.json({ error: 'Unsupported channel.', code: 'invalid_platform' }, { status: 400 });
   }
 
-  const incoming = new URL(req.url);
-  const suppliedProfileId = incoming.searchParams.get('profileId')?.trim();
-  const profileResult = suppliedProfileId || (await getOrCreateDefaultProfileId());
-  if (profileResult instanceof Response) return profileResult;
-  const profileId = profileResult;
+  const client = await getClientContext(req);
+  if (client instanceof Response) return client;
+  const accounts = await fetchMessageAccounts({ profileId: client.profileId, forceRefresh: true });
+  if (accounts instanceof Response) return accounts;
+  if (accounts.accounts.some((account) => account.platform === platform)) {
+    const alreadyConnected = new URL('/channels/callback', publicRequestOrigin(req));
+    alreadyConnected.searchParams.set('connected', '1');
+    alreadyConnected.searchParams.set('platform', platform);
+    return NextResponse.redirect(alreadyConnected);
+  }
 
+  const profileId = client.profileId;
   const redirectUrl = new URL('/channels/callback', publicRequestOrigin(req)).toString();
   const params = new URLSearchParams({ profileId, redirect_url: redirectUrl });
   const upstream = await zernioFetch(`/v1/connect/${encodeURIComponent(platform)}?${params}`);

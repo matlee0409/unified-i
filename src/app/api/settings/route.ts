@@ -1,3 +1,4 @@
+import { getClientContext } from '@/lib/server/client-auth';
 import {
   fetchMessageAccounts,
   hasSettingsCookie,
@@ -8,8 +9,10 @@ import { hasApiKey, missingKeyResponse } from '@/lib/server/zernio';
 
 export async function GET(req: Request) {
   if (!hasApiKey()) return missingKeyResponse();
+  const client = await getClientContext(req);
+  if (client instanceof Response) return client;
 
-  const result = await fetchMessageAccounts();
+  const result = await fetchMessageAccounts({ profileId: client.profileId });
   if (result instanceof Response) return result;
 
   const cookieHeader = req.headers.get('cookie');
@@ -31,7 +34,10 @@ export async function PUT(req: Request) {
 
   // Always force-refresh: sanitizing against a stale account list could drop
   // a freshly connected account the user just selected.
-  const result = await fetchMessageAccounts({ forceRefresh: true });
+  const client = await getClientContext(req);
+  if (client instanceof Response) return client;
+
+  const result = await fetchMessageAccounts({ profileId: client.profileId, forceRefresh: true });
   if (result instanceof Response) return result;
 
   const live = new Set(result.accounts.map((a) => a._id));

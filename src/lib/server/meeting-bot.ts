@@ -1,4 +1,5 @@
 import { composioFetch, hasComposioKey } from './composio';
+import { getBotConfiguration } from './bot-config';
 import { zernioFetch } from './zernio';
 
 const NVIDIA_URL = process.env.NVIDIA_API_URL ?? 'https://integrate.api.nvidia.com/v1/chat/completions';
@@ -158,10 +159,16 @@ export async function discoverConnectedTools(): Promise<DiscoveredTool[]> {
 export async function handleInboundMessage(input: { conversationId: string; accountId: string; text: string; senderName?: string }) {
   if (!process.env.NVIDIA_API_KEY) throw new Error('NVIDIA_API_KEY is not configured');
   const discoveredTools = await discoverConnectedTools();
+  const configuration = getBotConfiguration();
+  const systemMessage = [
+    configuration.systemPrompt,
+    `Tone: ${configuration.tone}`,
+    configuration.knowledgeBase ? `Business knowledge base:\n${configuration.knowledgeBase}` : '',
+  ].filter(Boolean).join('\n\n');
   const messages: Array<RecordValue> = [
     {
       role: 'system',
-      content: 'You are Bookly, a concise and friendly meeting assistant. Use the connected tools when they can answer the customer or complete a requested action. Reason through tool results before replying. Never claim a meeting is booked until the calendar tool succeeds. Ask for explicit confirmation before creating, changing, or cancelling a booking. If no suitable connected tool is available, explain that a team member will follow up.',
+      content: systemMessage,
     },
     { role: 'user', content: `${input.senderName ? `${input.senderName}: ` : ''}${input.text}` },
   ];
